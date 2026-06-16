@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Panini 2026" />
+  <title>Panini WC 2026</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9fafb; color: #111; min-height: 100vh; }
+
+    #app { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+
+    /* HEADER */
+    .header { background: linear-gradient(135deg, #1d4ed8 0%, #7c3aed 100%); color: #fff; padding: 16px 20px 14px; flex-shrink: 0; }
+    .header-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 2px; opacity: 0.8; text-transform: uppercase; }
+    .header-title { font-size: 20px; font-weight: 800; margin-top: 2px; }
+    .progress-row { display: flex; justify-content: space-between; font-size: 12px; margin: 10px 0 4px; opacity: 0.9; }
+    .progress-bar { height: 8px; background: rgba(255,255,255,0.25); border-radius: 99px; }
+    .progress-fill { height: 100%; background: #fff; border-radius: 99px; transition: width 0.4s; }
+    .stats-row { display: flex; gap: 10px; margin-top: 10px; }
+    .stat-box { flex: 1; border-radius: 10px; padding: 8px 6px; text-align: center; }
+    .stat-val { font-size: 20px; font-weight: 800; }
+    .stat-lbl { font-size: 9px; font-weight: 700; opacity: 0.85; margin-top: 1px; }
+
+    /* TABS */
+    .tabs { display: flex; background: #fff; border-bottom: 2px solid #e5e7eb; flex-shrink: 0; }
+    .tab { flex: 1; padding: 12px 2px; border: none; background: transparent; font-size: 11px; font-weight: 700; cursor: pointer; color: #6b7280; border-bottom: 3px solid transparent; transition: all 0.2s; }
+    .tab.active { color: #1d4ed8; border-bottom: 3px solid #1d4ed8; }
+
+    /* ALBUM VIEW */
+    .album-body { display: flex; flex: 1; overflow: hidden; }
+    .sidebar { width: 100px; overflow-y: auto; background: #fff; border-right: 1px solid #e5e7eb; flex-shrink: 0; }
+    .sidebar-btn { display: block; width: 100%; text-align: left; padding: 9px 8px; border: none; cursor: pointer; background: transparent; border-left: 3px solid transparent; font-size: 10px; font-weight: 500; color: #374151; }
+    .sidebar-btn.active { background: #eff6ff; border-left: 3px solid #1d4ed8; color: #1d4ed8; font-weight: 700; }
+    .sidebar-sub { font-size: 9px; color: #9ca3af; margin-top: 2px; }
+    .sidebar-sub.done { color: #16a34a; }
+
+    .grid-area { flex: 1; overflow-y: auto; padding: 12px; }
+    .grid-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: #374151; }
+    .sticker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; }
+    .sticker { border-radius: 10px; padding: 8px 4px 6px; text-align: center; cursor: pointer; border: 2px solid #d1d5db; background: #e5e7eb; position: relative; user-select: none; -webkit-user-select: none; transition: transform 0.1s; }
+    .sticker:active { transform: scale(0.93); }
+    .sticker.owned { background: #bbf7d0; border-color: #86efac; }
+    .sticker.double { background: #fde68a; border-color: #fcd34d; }
+    .sticker-id { font-size: 11px; font-weight: 800; }
+    .sticker.missing .sticker-id { color: #6b7280; }
+    .sticker.owned .sticker-id { color: #15803d; }
+    .sticker.double .sticker-id { color: #b45309; }
+    .sticker-sub { font-size: 9px; margin-top: 2px; }
+    .sticker.missing .sticker-sub { color: #9ca3af; }
+    .sticker.owned .sticker-sub { color: #16a34a; font-weight: 700; }
+    .badge { position: absolute; top: -7px; right: -7px; background: #f59e0b; color: #fff; border-radius: 99px; font-size: 9px; font-weight: 800; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+    .hint { margin-top: 16px; font-size: 11px; color: #9ca3af; text-align: center; }
+
+    /* DOUBLES & MISSING */
+    .list-area { flex: 1; overflow-y: auto; padding: 14px; }
+    .search-input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #e5e7eb; font-size: 14px; margin-bottom: 12px; outline: none; }
+    .search-input:focus { border-color: #1d4ed8; }
+    .list-sub { font-size: 12px; color: #6b7280; margin-bottom: 12px; }
+    .group-label { font-size: 11px; font-weight: 700; color: #374151; margin-bottom: 6px; padding: 4px 8px; background: #f3f4f6; border-radius: 6px; }
+    .group-block { margin-bottom: 14px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+
+    /* Double chip */
+    .dchip { display: flex; align-items: center; gap: 5px; background: #fef9c3; border: 1.5px solid #fcd34d; border-radius: 8px; padding: 6px 8px; }
+    .dchip-id { font-weight: 800; font-size: 12px; }
+    .dchip-count { font-size: 10px; color: #92400e; font-weight: 700; }
+    .dchip-btn { background: #fcd34d; border: none; border-radius: 4px; width: 22px; height: 22px; cursor: pointer; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .dchip-btn.minus { background: #e5e7eb; }
+
+    /* Missing chip */
+    .mchip { background: #fee2e2; border: 1.5px solid #fca5a5; border-radius: 8px; padding: 7px 10px; font-size: 12px; font-weight: 700; color: #991b1b; cursor: pointer; transition: transform 0.1s; }
+    .mchip:active { transform: scale(0.93); }
+
+    /* Empty states */
+    .empty { text-align: center; margin-top: 50px; color: #9ca3af; }
+    .empty-icon { font-size: 44px; }
+    .empty-txt { font-weight: 700; margin-top: 10px; font-size: 15px; }
+
+    /* Context menu prevention on mobile */
+    img { -webkit-touch-callout: none; }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const ALBUM = [
+  { group: "Couverture & Intro", prefix: "COV", count: 10 },
+  { group: "Groupe A", prefix: "A", count: 20 },
+  { group: "Groupe B", prefix: "B", count: 20 },
+  { group: "Groupe C", prefix: "C", count: 20 },
+  { group: "Groupe D", prefix: "D", count: 20 },
+  { group: "Groupe E", prefix: "E", count: 20 },
+  { group: "Groupe F", prefix: "F", count: 20 },
+  { group: "Groupe G", prefix: "G", count: 20 },
+  { group: "Groupe H", prefix: "H", count: 20 },
+  { group: "Groupe I", prefix: "I", count: 20 },
+  { group: "Groupe J", prefix: "J", count: 20 },
+  { group: "Groupe K", prefix: "K", count: 20 },
+  { group: "Groupe L", prefix: "L", count: 20 },
+  { group: "Stades", prefix: "ST", count: 16 },
+  { group: "Spéciales", prefix: "SP", count: 10 },
+];
+
+const ALL = ALBUM.flatMap(g => Array.from({length: g.count}, (_, i) => ({
+  id: `${g.prefix}${i+1}`, group: g.group
+})));
+
+const TOTAL = ALL.length;
+const KEY = "panini-wc2026";
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; }
+}
+function save(d) {
+  try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {}
+}
+
+let owned = load();
+let view = "album";
+let activeGroup = ALBUM[0].group;
+let search = "";
+let holdTimer = null;
+
+function setCount(id, delta) {
+  owned[id] = Math.max(0, (owned[id] || 0) + delta);
+  if (owned[id] === 0) delete owned[id];
+  save(owned);
+  render();
+}
+
+function resetSticker(id) {
+  delete owned[id];
+  save(owned);
+  render();
+}
+
+function stats() {
+  const o = ALL.filter(s => (owned[s.id] || 0) >= 1).length;
+  const doubles = ALL.filter(s => (owned[s.id] || 0) >= 2);
+  const dc = doubles.reduce((a, s) => a + (owned[s.id] - 1), 0);
+  const missing = ALL.filter(s => !(owned[s.id] || 0));
+  return { o, dc, missing, doubles, pct: Math.round(o/TOTAL*100) };
+}
+
+function stickerStatus(id) {
+  const c = owned[id] || 0;
+  if (c === 0) return "missing";
+  if (c === 1) return "owned";
+  return "double";
+}
+
+function render() {
+  const { o, dc, missing, doubles, pct } = stats();
+  const app = document.getElementById("app");
+
+  let html = `
+  <div class="header">
+    <div class="header-eyebrow">⚽ Coupe du Monde 2026</div>
+    <div class="header-title">Ma Collection Panini</div>
+    <div class="progress-row"><span>${o} / ${TOTAL} vignettes</span><span style="font-weight:800">${pct}%</span></div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="stats-row">
+      <div class="stat-box" style="background:#bbf7d0">
+        <div class="stat-val" style="color:#166534">${o}</div>
+        <div class="stat-lbl" style="color:#166534">Possédées</div>
+      </div>
+      <div class="stat-box" style="background:#fecaca">
+        <div class="stat-val" style="color:#991b1b">${TOTAL-o}</div>
+        <div class="stat-lbl" style="color:#991b1b">Manquantes</div>
+      </div>
+      <div class="stat-box" style="background:#fde68a">
+        <div class="stat-val" style="color:#92400e">${dc}</div>
+        <div class="stat-lbl" style="color:#92400e">Doubles</div>
+      </div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab ${view==='album'?'active':''}" onclick="switchView('album')">📖 Album</button>
+    <button class="tab ${view==='doubles'?'active':''}" onclick="switchView('doubles')">🔁 Doubles (${dc})</button>
+    <button class="tab ${view==='missing'?'active':''}" onclick="switchView('missing')">❓ Manquantes (${TOTAL-o})</button>
+  </div>`;
+
+  if (view === "album") {
+    html += `<div class="album-body"><div class="sidebar">`;
+    ALBUM.forEach(g => {
+      const gt = ALL.filter(s => s.group === g.group).length;
+      const go = ALL.filter(s => s.group === g.group && (owned[s.id]||0) >= 1).length;
+      const done = go === gt;
+      html += `<button class="sidebar-btn ${activeGroup===g.group?'active':''}" onclick="setGroup('${g.group}')">
+        ${g.group.replace("Groupe ","Gr. ")}
+        <div class="sidebar-sub ${done?'done':''}">${go}/${gt}${done?' ✓':''}</div>
+      </button>`;
+    });
+    html += `</div><div class="grid-area"><div class="grid-title">${activeGroup}</div><div class="sticker-grid">`;
+    ALL.filter(s => s.group === activeGroup).forEach(s => {
+      const c = owned[s.id] || 0;
+      const st = stickerStatus(s.id);
+      const sub = st==='owned' ? '✓' : st==='double' ? `×${c}` : '—';
+      const badge = c >= 2 ? `<div class="badge">×${c}</div>` : '';
+      html += `<div class="sticker ${st}" 
+        ontouchstart="startHold('${s.id}',event)" 
+        ontouchend="endHold()" 
+        ontouchcancel="endHold()"
+        onclick="tap('${s.id}')"
+        oncontextmenu="ctxMenu('${s.id}',event)">
+        ${badge}
+        <div class="sticker-id">${s.id}</div>
+        <div class="sticker-sub">${sub}</div>
+      </div>`;
+    });
+    html += `</div><div class="hint">Tap = +1 &nbsp;·&nbsp; Appui long = remettre à 0</div></div></div>`;
+  }
+
+  else if (view === "doubles") {
+    const fd = doubles.filter(s => !search || s.id.toLowerCase().includes(search.toLowerCase()));
+    html += `<div class="list-area">
+      <input class="search-input" type="search" placeholder="Rechercher ex: A5, SP2…" value="${search}" oninput="doSearch(this.value)" />`;
+    if (fd.length === 0) {
+      html += `<div class="empty"><div class="empty-icon">🎉</div><div class="empty-txt">Aucun double pour l'instant !</div></div>`;
+    } else {
+      html += `<div class="list-sub">${fd.length} vignettes · ${fd.reduce((a,s)=>a+(owned[s.id]-1),0)} exemplaires à échanger</div>`;
+      ALBUM.forEach(g => {
+        const gd = fd.filter(s => s.group === g.group);
+        if (!gd.length) return;
+        html += `<div class="group-block"><div class="group-label">${g.group}</div><div class="chips">`;
+        gd.forEach(s => {
+          html += `<div class="dchip">
+            <span class="dchip-id">${s.id}</span>
+            <span class="dchip-count">×${owned[s.id]}</span>
+            <button class="dchip-btn" onclick="setCount('${s.id}',1)">+</button>
+            <button class="dchip-btn minus" onclick="setCount('${s.id}',-1)">−</button>
+          </div>`;
+        });
+        html += `</div></div>`;
+      });
+    }
+    html += `</div>`;
+  }
+
+  else if (view === "missing") {
+    const fm = missing.filter(s => !search || s.id.toLowerCase().includes(search.toLowerCase()));
+    html += `<div class="list-area">
+      <input class="search-input" type="search" placeholder="Rechercher ex: A5, ST3…" value="${search}" oninput="doSearch(this.value)" />`;
+    if (fm.length === 0) {
+      html += `<div class="empty"><div class="empty-icon">🏆</div><div class="empty-txt">Album complet !</div></div>`;
+    } else {
+      html += `<div class="list-sub">${fm.length} vignettes manquantes</div>`;
+      ALBUM.forEach(g => {
+        const gm = fm.filter(s => s.group === g.group);
+        if (!gm.length) return;
+        html += `<div class="group-block"><div class="group-label">${g.group} <span style="color:#9ca3af;font-weight:400">(${gm.length})</span></div><div class="chips">`;
+        gm.forEach(s => {
+          html += `<div class="mchip" onclick="tap('${s.id}')">${s.id}</div>`;
+        });
+        html += `</div></div>`;
+      });
+    }
+    html += `</div>`;
+  }
+
+  app.innerHTML = html;
+}
+
+function switchView(v) { view = v; search = ""; render(); }
+function setGroup(g) { activeGroup = g; render(); }
+function doSearch(v) { search = v; render(); }
+
+function tap(id) {
+  if (holdTimer) return; // prevent tap firing after long press
+  setCount(id, 1);
+}
+
+function startHold(id, e) {
+  holdTimer = null;
+  holdTimer = setTimeout(() => {
+    holdTimer = "fired";
+    resetSticker(id);
+    if (navigator.vibrate) navigator.vibrate(30);
+  }, 500);
+}
+
+function endHold() {
+  if (holdTimer && holdTimer !== "fired") clearTimeout(holdTimer);
+  setTimeout(() => { holdTimer = null; }, 50);
+}
+
+function ctxMenu(id, e) {
+  e.preventDefault();
+  resetSticker(id);
+}
+
+render();
+</script>
+</body>
+</html>
